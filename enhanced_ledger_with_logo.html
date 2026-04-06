@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A.James Art Studio — Financial Ledger</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0a0a0a;
+            --accent: #c9a84c;
+            --accent-light: #e8d08a;
+            --bg-main: #f4f1ea; /* Slightly warmer paper-like background */
+            --bg-card: #ffffff;
+            --text-main: #1a1a1a;
+            --text-muted: #718096;
+            --success: #2d6a4f;
+            --danger: #a4161a;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --font-sans: 'Inter', sans-serif;
+            --font-serif: 'Cormorant Garamond', serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Layout */
+        .app-container {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--primary);
+            color: #fff;
+            padding: 2rem 1.5rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-container {
+            margin-bottom: 2.5rem;
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .logo-img {
+            max-width: 180px;
+            height: auto;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+        }
+
+        .brand-subtitle {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* Form Styling */
+        .form-section-title {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .type-selector {
+            display: flex;
+            background: rgba(0,0,0,0.3);
+            padding: 4px;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .type-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.4);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .type-btn.active-income { background: var(--success); color: white; }
+        .type-btn.active-expense { background: var(--danger); color: white; }
+
+        .input-group { margin-bottom: 1rem; }
+        .input-group label {
+            display: block;
+            font-size: 0.65rem;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .input-control {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: #fff;
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .input-control:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(255,255,255,0.08);
+        }
+
+        .row-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .category-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .tag {
+            padding: 4px 8px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-family: var(--font-mono);
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tag:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .tag.active { border-color: var(--accent); color: var(--accent); background: rgba(201, 168, 76, 0.1); }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: var(--primary);
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+
+        .submit-btn:hover {
+            background: var(--accent-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(201, 168, 76, 0.4);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            padding: 2.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Header / Stats */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .month-selector-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+
+        .month-select {
+            padding: 4px 8px;
+            border: none;
+            background: transparent;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            color: var(--primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--border);
+        }
+
+        .stat-card.income-card::before { background: var(--success); }
+        .stat-card.expense-card::before { background: var(--danger); }
+        .stat-card.profit-card::before { background: var(--accent); }
+
+        .stat-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+
+        .stat-label {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            letter-spacing: 1.5px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+
+        .stat-value.income { color: var(--success); }
+        .stat-value.expense { color: var(--danger); }
+        .stat-value.profit { color: var(--accent); }
+
+        /* Ledger Table Section */
+        .ledger-container {
+            background: var(--bg-card);
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .ledger-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+        }
+
+        .ledger-header h2 {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .action-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-outline {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-muted);
+        }
+
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: #f8f9fa; }
+        .btn-dark { background: var(--primary); color: var(--accent); border: 1px solid var(--primary); }
+        .btn-dark:hover { background: #222; color: var(--accent-light); }
+
+        .filter-strip {
+            padding: 12px 1.5rem;
+            background: #fafafa;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+        }
+
+        .filter-pill {
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            font-size: 0.65rem;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            cursor: pointer;
+            white-space: nowrap;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .filter-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .filter-pill:hover:not(.active) { border-color: var(--text-muted); color: var(--primary); }
+
+        /* Table Styling */
+        .table-responsive { overflow-x: auto; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background: #fff;
+            padding: 15px;
+            text-align: left;
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--border);
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 16px 15px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: #fcfcfc; }
+
+        .cell-date { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); }
+        .cell-ref { font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent); font-weight: 600; }
+        .cell-desc { font-weight: 600; color: var(--primary); }
+        .cell-project { font-size: 0.7rem; color: var(--text-muted); font-style: italic; margin-top: 2px; }
+        
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.6rem;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-income { background: #e6f4ea; color: #1e7e34; border: 1px solid rgba(30, 126, 52, 0.1); }
+        .badge-expense { background: #fdf2f2; color: #c81e1e; border: 1px solid rgba(200, 30, 30, 0.1); }
+
+        .cell-amount {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+
+        .delete-btn {
+            background: #f8f9fa;
+            border: 1px solid var(--border);
+            color: #cbd5e0;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .delete-btn:hover { color: var(--danger); border-color: var(--danger); background: #fff1f1; }
+
+        .empty-state {
+            padding: 5rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-state i { font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.1; }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            border-left: 4px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
+
+        /* Responsive */
+        @media (max-width: 1100px) {
+            .app-container { grid-template-columns: 1fr; }
+            .sidebar { height: auto; position: relative; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .main-content { padding: 1.5rem; }
+            .top-bar { flex-direction: column; gap: 1rem; align-items: flex-start; }
+            .stat-card { padding: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="brand-container">
+            <!-- LOGO INTEGRATION -->
+            <img src="data:image/jpeg;base64,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" alt="A.James Art Studio Logo" class="logo-img">
+            <div class="brand-subtitle">Financial Ledger</div>
+        </div>
+
+        <div class="form-section-title">New Entry</div>
+        
+        <div class="type-selector">
+            <button type="button" id="btnInc" class="type-btn active-income" onclick="setType('income')">Income</button>
+            <button type="button" id="btnExp" class="type-btn" onclick="setType('expense')">Expense</button>
+        </div>
+
+        <div class="input-group">
+            <label>Date</label>
+            <input type="date" id="fDate" class="input-control">
+        </div>
+
+        <div class="input-group">
+            <label>Description</label>
+            <input type="text" id="fDesc" class="input-control" placeholder="e.g. Canvas Sale">
+        </div>
+
+        <div class="row-grid">
+            <div class="input-group">
+                <label>Amount (₦)</label>
+                <input type="number" id="fAmt" class="input-control" placeholder="0.00">
+            </div>
+            <div class="input-group">
+                <label>Ref / Folio</label>
+                <input type="text" id="fRef" class="input-control" placeholder="REF-001">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Project / Commission</label>
+            <input type="text" id="fProj" class="input-control" placeholder="Project name">
+        </div>
+
+        <div class="input-group">
+            <label>Category</label>
+            <div id="catPills" class="category-tags"></div>
+            <select id="fCat" class="input-control" style="display:none;"></select>
+        </div>
+
+        <div class="input-group">
+            <label>Payment Method</label>
+            <select id="fPay" class="input-control">
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Cash">Cash</option>
+                <option value="POS / Card">POS / Card</option>
+                <option value="Online / Stripe">Online / Stripe</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Notes</label>
+            <textarea id="fNotes" class="input-control" rows="2" placeholder="Additional details..."></textarea>
+        </div>
+
+        <button class="submit-btn" onclick="addEntry()">Record Entry</button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-bar">
+            <div class="month-selector-wrap">
+                <span style="font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px;">Reporting Period:</span>
+                <select id="monthSel" class="month-select" onchange="renderAll()"></select>
+            </div>
+            <div style="font-family: var(--font-serif); font-style: italic; color: var(--text-muted); font-size: 1.1rem;">
+                "Every artist dips his brush in his own soul."
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card income-card">
+                <div class="stat-label">Total Income</div>
+                <div id="statInc" class="stat-value income">₦0.00</div>
+            </div>
+            <div class="stat-card expense-card">
+                <div class="stat-label">Total Expenses</div>
+                <div id="statExp" class="stat-value expense">₦0.00</div>
+            </div>
+            <div class="stat-card profit-card">
+                <div class="stat-label">Net Profit</div>
+                <div id="statProfit" class="stat-value profit">₦0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Entries</div>
+                <div id="statCount" class="stat-value">0</div>
+            </div>
+        </div>
+
+        <div class="ledger-container">
+            <div class="ledger-header">
+                <h2>Studio Ledger</h2>
+                <div class="action-group">
+                    <button class="btn-outline" onclick="clearMonth()">Clear Month</button>
+                    <button class="btn-outline btn-dark" onclick="exportCSV()">Export CSV</button>
+                </div>
+            </div>
+
+            <div id="filterBar" class="filter-strip"></div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Ref</th>
+                            <th>Description & Project</th>
+                            <th>Category</th>
+                            <th>Method</th>
+                            <th style="text-align:right">Amount</th>
+                            <th style="width:50px"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledgerBody"></tbody>
+                </table>
+            </div>
+            <div id="emptyState" class="empty-state" style="display:none;">
+                <i>📭</i>
+                <p style="font-family: var(--font-mono); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">No records found for this period.</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="toast" class="toast">
+    <span>✓</span>
+    <span id="toastMsg">Entry added successfully</span>
+</div>
+
+<script>
+    /* ── DATA ── */
+    let entries = JSON.parse(localStorage.getItem('ajames_v2')) || [];
+    let currentType = 'income';
+    let currentFilter = 'ALL';
+
+    const CATEGORIES = {
+        income: ['Art Sale', 'Commission', 'Workshop', 'Licensing', 'Grant', 'Other'],
+        expense: ['Supplies', 'Studio Rent', 'Marketing', 'Shipping', 'Travel', 'Software', 'Other']
+    };
+
+    /* ── CORE LOGIC ── */
+    function setType(t) {
+        currentType = t;
+        document.getElementById('btnInc').className = 'type-btn' + (t === 'income' ? ' active-income' : '');
+        document.getElementById('btnExp').className = 'type-btn' + (t === 'expense' ? ' active-expense' : '');
+        renderCats();
+    }
+
+    function renderCats() {
+        const container = document.getElementById('catPills');
+        const select = document.getElementById('fCat');
+        container.innerHTML = '';
+        select.innerHTML = '';
+        
+        CATEGORIES[currentType].forEach((cat, i) => {
+            const pill = document.createElement('div');
+            pill.className = 'tag' + (i === 0 ? ' active' : '');
+            pill.textContent = cat;
+            pill.onclick = () => {
+                document.querySelectorAll('.tag').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                select.value = cat;
+            };
+            container.appendChild(pill);
+
+            const opt = document.createElement('option');
+            opt.value = cat; opt.textContent = cat;
+            select.appendChild(opt);
+        });
+        select.value = CATEGORIES[currentType][0];
+    }
+
+    function addEntry() {
+        const date = document.getElementById('fDate').value;
+        const desc = document.getElementById('fDesc').value;
+        const amt = parseFloat(document.getElementById('fAmt').value);
+        const ref = document.getElementById('fRef').value;
+        const proj = document.getElementById('fProj').value;
+        const cat = document.getElementById('fCat').value;
+        const pay = document.getElementById('fPay').value;
+        const notes = document.getElementById('fNotes').value;
+
+        if (!date || !desc || isNaN(amt)) {
+            toast('Please fill required fields');
+            return;
+        }
+
+        const entry = {
+            id: Date.now(),
+            month: date.substring(0, 7),
+            date, desc, amount: amt, ref, project: proj,
+            category: cat, payment: pay, notes, type: currentType
+        };
+
+        entries.push(entry);
+        save();
+        renderAll();
+        
+        // Reset form
+        document.getElementById('fDesc').value = '';
+        document.getElementById('fAmt').value = '';
+        document.getElementById('fRef').value = '';
+        document.getElementById('fProj').value = '';
+        document.getElementById('fNotes').value = '';
+        toast('Entry recorded successfully');
+    }
+
+    function deleteEntry(id) {
+        if (!confirm('Delete this entry?')) return;
+        entries = entries.filter(e => e.id !== id);
+        save();
+        renderAll();
+        toast('Entry deleted');
+    }
+
+    function clearMonth() {
+        const mk = monthKey();
+        if (!confirm(`Delete ALL entries for ${monthLabel()}?`)) return;
+        entries = entries.filter(e => e.month !== mk);
+        save();
+        renderAll();
+        toast('Month cleared');
+    }
+
+    /* ── RENDERING ── */
+    function renderAll() {
+        const mk = monthKey();
+        const filtered = entries.filter(e => e.month === mk);
+        
+        // Stats
+        let inc = 0, exp = 0;
+        filtered.forEach(e => {
+            if (e.type === 'income') inc += e.amount;
+            else exp += e.amount;
+        });
+
+        document.getElementById('statInc').textContent = '₦' + fmt(inc);
+        document.getElementById('statExp').textContent = '₦' + fmt(exp);
+        document.getElementById('statProfit').textContent = '₦' + fmt(inc - exp);
+        document.getElementById('statCount').textContent = filtered.length;
+
+        // Filter Bar
+        renderFilterBar(filtered);
+
+        // Table
+        const displayList = currentFilter === 'ALL' ? filtered : filtered.filter(e => e.category === currentFilter);
+        const body = document.getElementById('ledgerBody');
+        const empty = document.getElementById('emptyState');
+        body.innerHTML = '';
+
+        if (displayList.length === 0) {
+            empty.style.display = 'block';
+        } else {
+            empty.style.display = 'none';
+            displayList.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(e => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="cell-date">${e.date}</td>
+                    <td class="cell-ref">${esc(e.ref || '—')}</td>
+                    <td>
+                        <div class="cell-desc">${esc(e.desc)}</div>
+                        <div class="cell-project">${esc(e.project || '')}</div>
+                    </td>
+                    <td><span class="badge badge-${e.type}">${esc(e.category)}</span></td>
+                    <td class="cell-date" style="font-size:0.7rem">${esc(e.payment)}</td>
+                    <td class="cell-amount ${e.type === 'income' ? 'income' : 'expense'}">
+                        ${e.type === 'income' ? '+' : '-'}${fmt(e.amount)}
+                    </td>
+                    <td style="text-align:center">
+                        <button class="delete-btn" onclick="deleteEntry(${e.id})">×</button>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+    }
+
+    function renderFilterBar(monthEntries) {
+        const bar = document.getElementById('filterBar');
+        const cats = ['ALL', ...new Set(monthEntries.map(e => e.category))];
+        bar.innerHTML = '';
+        cats.forEach(c => {
+            const p = document.createElement('div');
+            p.className = 'filter-pill' + (currentFilter === c ? ' active' : '');
+            p.textContent = c;
+            p.onclick = () => { currentFilter = c; renderAll(); };
+            bar.appendChild(p);
+        });
+    }
+
+    /* ── HELPERS ── */
+    function monthKey() { return document.getElementById('monthSel').value; }
+    function monthLabel() { 
+        const sel = document.getElementById('monthSel');
+        return sel.options[sel.selectedIndex].text;
+    }
+    function initMonthSel() {
+        const sel = document.getElementById('monthSel');
+        const now = new Date();
+        for (let i = 0; i < 24; i++) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const val = d.toISOString().substring(0, 7);
+            const txt = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            const opt = document.createElement('option');
+            opt.value = val; opt.textContent = txt;
+            sel.appendChild(opt);
+        }
+    }
+
+    function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function fmt(n) { return n.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function save() { localStorage.setItem('ajames_v2', JSON.stringify(entries)); }
+
+    function toast(msg) {
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    /* ── CSV EXPORT ── */
+    function exportCSV() {
+        const mk = monthKey();
+        const all = entries.filter(e => e.month === mk).sort((a, b) => new Date(a.date) - new Date(b.date));
+        if (!all.length) { toast('No entries to export'); return; }
+
+        const inc = all.filter(e => e.type === 'income');
+        const exp = all.filter(e => e.type === 'expense');
+        const tI = inc.reduce((s, e) => s + e.amount, 0);
+        const tE = exp.reduce((s, e) => s + e.amount, 0);
+        const net = tI - tE;
+        const label = monthLabel();
+
+        const q = s => '"' + String(s || '').replace(/"/g, '""') + '"';
+        let csv = 'A.JAMES ART STUDIO — FINANCIAL LEDGER\n';
+        csv += `Month,${label}\nGenerated,${new Date().toLocaleDateString()}\n\n`;
+        csv += `SUMMARY\nTotal Income,₦${fmt(tI)}\nTotal Expenses,₦${fmt(tE)}\nNet Profit,₦${fmt(net)}\n\n`;
+        csv += 'Date,Ref,Type,Category,Description,Project,Payment,Amount,Notes\n';
+        
+        all.forEach(e => {
+            csv += [e.date, q(e.ref), e.type.toUpperCase(), q(e.category), q(e.desc), q(e.project), q(e.payment), e.amount.toFixed(2), q(e.notes)].join(',') + '\n';
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `AJames_Ledger_${label.replace(' ', '_')}.csv`; a.click();
+        URL.revokeObjectURL(url);
+        toast('Exported successfully');
+    }
+
+    /* ── INIT ── */
+    initMonthSel();
+    renderCats();
+    document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+    renderAll();
+</script>
+
+</body>
+</html>
